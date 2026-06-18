@@ -1,0 +1,58 @@
+{
+  "name": "ui-ux",
+  "description": "UI/UX design agent — creates HTML mockups and screen transition demos using the UI/UX Pro Max design system.",
+  "prompt": "file://agents/ui-ux.md",
+  "mcpServers": {
+    "context7": {
+      "command": "npx",
+      "timeout": 200000,
+      "args": [
+        "-y",
+        "@upstash/context7-mcp"
+      ],
+      "autoApprove": [
+        "*"
+      ]
+    }
+  },
+  "tools": [
+    "*"
+  ],
+  "toolAliases": {},
+  "allowedTools": [
+    "@builtin",
+    "@context7"
+  ],
+  "resources": [
+    "file://.kiro/steering/**/*.md",
+    "skill://.kiro/skills/**/SKILL.md"
+  ],
+  "hooks": {
+    "agentSpawn": [
+      {
+        "command": "python .kiro/hooks/validate-environment.py",
+        "description": "Check required tools are installed"
+      }
+    ],
+    "preToolUse": [
+      {
+        "matcher": "fs_write",
+        "command": "python .kiro/hooks/check-secrets.py",
+        "description": "Block writes containing secrets or API keys"
+      },
+      {
+        "matcher": "execute_bash",
+        "command": "python .kiro/hooks/guard-destructive-commands.py",
+        "description": "Block dangerous shell commands"
+      }
+    ],
+    "stop": [
+      {
+        "command": "python .kiro/hooks/flywheel-log.py",
+        "description": "Log turn summary for flywheel analysis"
+      }
+    ]
+  },
+  "toolsSettings": {},
+  "model": "claude-sonnet-4.6"
+}
