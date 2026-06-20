@@ -10,17 +10,24 @@ inclusion: always
 
 ```bash
 cat .kiro/specs/currentspec.md 2>/dev/null || echo "NO_ACTIVE_SPEC"
+cat .kiro/specs/pm-state.md 2>/dev/null || echo "NO_PM_STATE"
 ```
+
+If `pm-state.md` contains `WAITING_*`, the PM agent is mid-conversation with the user. Do NOT proceed — the PM is handling this request. Stop and wait.
 
 ### If output is a slug (e.g. `2026-06-15-todo-app`) → RESUME MODE
 
 An active spec exists. Do NOT create a new spec. Resume from where it left off:
 
-1. Read `.kiro/specs/<slug>/tasks.md`
-2. Find the **first group** that has any task still marked `[ ]`
-3. If **no `[ ]` tasks remain** → spec is complete; run `rm .kiro/specs/currentspec.md` and tell the user it's done
-4. If `[ ]` tasks exist → go directly to the **Execution Loop** (Step 6 of the MANDATORY section below) — enter the loop at the first incomplete group
-5. Skip every group where all tasks are `[x]` — do not re-run completed work, do not re-dispatch completed agents
+1. Detect the mode:
+   - `ls .kiro/specs/<slug>/prd/requirements.md 2>/dev/null` → NEW_FEATURE mode
+   - `ls .kiro/specs/<slug>/bug-report.md 2>/dev/null` → BUG_FIX mode
+   - `ls .kiro/specs/<slug>/refactor-scope.md 2>/dev/null` → REFACTOR mode
+2. Read `.kiro/specs/<slug>/tasks.md`
+3. Find the **first group** that has any task still marked `[ ]`
+4. If **no `[ ]` tasks remain** → spec is complete; run `rm .kiro/specs/currentspec.md` and tell the user it's done
+5. If `[ ]` tasks exist → enter the **Execution Loop** for the detected mode — start at the first incomplete group
+6. Skip every group where all tasks are `[x]` — do not re-run completed work
 
 **Resume is silent** — do not ask the user "should I continue?" — just continue.
 
@@ -28,81 +35,51 @@ An active spec exists. Do NOT create a new spec. Resume from where it left off:
 
 ### If output is `NO_ACTIVE_SPEC` → NEW REQUEST MODE
 
-No active spec. Read the user's message and follow the MANDATORY section below.
+No active spec. The architect reads its dispatch context (`Mode:` field) and follows the FIRST ACTION section in `architect.md`.
 
 ---
 
-## ⚡ MANDATORY: When Dispatched by PM Agent (PRD Confirmed by User)
+## ⚡ EXECUTION LOOP — Run Until All Tasks Are `[x]`
 
-The architect only runs this section when dispatched by the PM agent after user confirmation. The PM agent always dispatches with `relevant_context` containing `"User confirmed requirements: YES"`.
-
-**If you are the architect and were NOT dispatched by PM** (i.e., you received a direct user message with no PRD): respond with: "Please describe your request and I'll hand it to the PM agent for requirements gathering." Do not create spec or tasks directly.
-
-### Step 1 — Read the confirmed PRD
-```bash
-cat .kiro/specs/<slug>/prd/requirements.md
-```
-The slug is in `relevant_context` from the PM dispatch. This PRD has been user-confirmed — use it as the single source of truth.
-
-### Step 2 — Create spec.md from the PRD
-
-Write `.kiro/specs/<slug>/spec.md` mapping PRD sections:
-- **Context** → PRD section 1 (Problem Statement) + section 2 (Users & Personas)
-- **Decision** → PRD section 3 (Functional Requirements) — list the epics and Must Have user stories
-- **Constraints** → PRD section 4 (NFRs) + section 5 (Technical Constraints)
-- **Design** → PRD section 6 (Screens & User Flows)
-- **Risks** → PRD section 7 (Risk & Assumptions)
-
-### Step 3 — Write currentspec.md
-Write `.kiro/specs/currentspec.md` containing only the slug. (Already written by PM — overwrite to confirm.)
-
-### Step 4 — Write tasks.md
-Write `.kiro/specs/<slug>/tasks.md` with Group 0 (UI Design), Group 1 (Research), implementation groups, a Review gate group, and a Documentation group.
-Scope implementation tasks to the PRD's **Must Have** user stories (US-xx) — reference their IDs in each task (e.g., `Implement US-01: user login screen`).
-
-### Step 5 — Dispatch ui-ux agent (if spec has any user-facing screens)
-Call the `subagent` tool immediately:
-```
-subagent(
-  agent_name="ui-ux",
-  query="Design HTML mockups for every screen in the spec. Output to .kiro/specs/<slug>/ui/: screens/NN-name.html per screen, transitions/flow.html for the animated flow, index.html as the hub, design-system.md for design choices. Mark the ui-design task [x] in .kiro/specs/<slug>/tasks.md when done.",
-  relevant_context="<paste the full text of the spec.md you just wrote>"
-)
-```
+Once spec.md and tasks.md exist, enter this loop and **do not exit until every task in tasks.md is `[x]`**:
 
 ### Step 6 — Enter the execution loop (run this loop until ALL tasks are `[x]`)
 
 After ui-ux completes (or if there are no UI screens), enter this loop and **do not exit until every task in tasks.md is `[x]`**:
 
 ```
-LOOP:
+LOOP — repeat until no [ ] tasks remain:
+
   1. Read .kiro/specs/<slug>/tasks.md
-  2. Find the FIRST group that has any task still marked `[ ]`
-  3. If NO such group exists → ALL DONE, exit loop
-  4. Determine the agent for each `[ ]` task in that group:
-       - "UI Design" group          → agent_name="ui-ux"
-       - "Research" group           → agent_name="coder"
-       - "Implementation" group     → agent_name="coder" or "ops" (per task)
-       - "Review gate" group        → agent_name="reviewer", then agent_name="security-reviewer"
-                                     IMPORTANT: pass only file PATHS to reviewer — do NOT paste full file contents.
-                                     reviewer reads files itself. Short query = reliable execution.
-       - "Documentation" group      → agent_name="docs" (query MUST say: "Write docs/architecture.md in arc42 format (all 12 sections) and docs/c4.md with C4 diagrams (Level 1, 2, 3). Read .kiro/skills/arc42/SKILL.md and .kiro/skills/c4/SKILL.md for templates. Also update README.md.")
-  5. Dispatch ALL `[ ]` tasks in that group in parallel using subagent:
-       subagent(agent_name="<agent>", query="<task text + file paths + how to mark complete>", relevant_context="<spec path + task definition — keep short, pass paths not file contents>")
-  6. After subagent returns (even if it returned "No result" or empty output):
-       Read tasks.md directly — the return value of subagent is unreliable.
-       "No result" does NOT mean failure — check tasks.md, not the return value.
-  7. If tasks.md shows all tasks in this group are `[x]` → group complete, go to step 1
-  8. If any task is `[!]` → STOP. Report to the user:
-       - Which task is blocked and the note on the `[!]` line
-       - Do NOT retry automatically
-  9. If tasks are STILL `[ ]` after subagent returned → the agent ran but did not complete.
-       Retry the dispatch ONCE with a shorter, more direct query.
-       If still `[ ]` after retry → mark `[!]` with "two attempts, no progress" and STOP
- 10. Go back to step 1
+  2. Find the FIRST group that has any task still marked [ ]
+  3. If NO such group → ALL DONE. Delete currentspec.md and report done to user. EXIT.
+  4. Pick the agent for that group:
+       UI Design group     → agent_name="ui-ux"
+       Research group      → agent_name="coder"
+       Implementation      → agent_name="coder" or "ops"
+       Review gate         → agent_name="reviewer"  ← then WAIT for PASS before next call
+                             then agent_name="security-reviewer"
+       Documentation       → agent_name="docs"
+  5. Call subagent() ONCE. Wait for it to return before doing anything else.
+       subagent(
+         agent_name="<agent>",
+         query="<task text + file paths + instruction to mark [x] in tasks.md when done>",
+         relevant_context="<spec path only — pass paths, not file contents>"
+       )
+  6. Read tasks.md again (do NOT trust the return value — subagent may return "No result" even on success).
+  7. If all tasks in that group are [x] → go to step 1.
+     If any task is [!] → STOP. Report the blocked task to the user.
+     If tasks still [ ] → retry ONCE with a shorter, more direct query.
+                          If still [ ] after retry → mark [!] with note and STOP.
 ```
 
-**The loop replaces manual step-by-step thinking. You do not decide when to stop — the tasks.md file decides. Keep looping until every `[ ]` is `[x]`.**
+**⚠️ BANNED — these do not exist in Kiro CLI and will cause the workflow to hang:**
+- DAG pipelines ("stage 1 → stage 2 pipeline")
+- Multi-stage or chained subagent calls
+- "Optimizing" by combining two groups into one subagent call
+- Dispatching review and implementation simultaneously
+
+**One subagent call = one group = one agent. Always sequential between groups.**
 
 **This sequence is not optional.** Every user request for implementation must produce: a spec folder, spec.md, tasks.md, currentspec.md, ui design, implementation, review, and documentation — all executed autonomously without waiting for the user.
 

@@ -63,10 +63,14 @@
   "toolsSettings": {
     "subagent": {
       "availableAgents": [
-        "architect"
+        "architect",
+        "coder",
+        "docs"
       ],
       "trustedAgents": [
-        "architect"
+        "architect",
+        "coder",
+        "docs"
       ]
     }
   },

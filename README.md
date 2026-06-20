@@ -128,19 +128,81 @@ Model: `claude-sonnet-4.6`
 
 ---
 
-## Workflow in Detail
+## Workflows
 
-### New Request Flow
+### New Feature / New Project
 
 ```
-1. User types request → PM agent asks clarifying questions
-2. User answers → PM writes PRD draft → shows summary
-3. User says YES → PM dispatches Architect
-4. Architect reads PRD → writes spec.md + tasks.md
-5. Architect dispatches UI/UX → screens created
-6. Architect loop begins:
-     Read tasks.md → find first [ ] group → dispatch agent → verify [x] → repeat
-7. All tasks [x] → currentspec.md deleted → user notified
+User describes request
+ └─► PM classifies → "New Feature" path
+      └─► PM asks 5–8 discovery questions
+           └─► User answers
+                └─► PM writes PRD draft → shows summary
+                     └─► User says YES
+                          └─► PM dispatches Architect (Mode: NEW_FEATURE)
+                               └─► Architect reads PRD → writes spec.md + tasks.md
+                                    └─► UI/UX → screens
+                                         └─► Coder/Ops → implementation groups
+                                              └─► Reviewer → security-reviewer
+                                                   └─► Docs (arc42 + C4)
+                                                        └─► Done
+```
+
+### Bug Fix
+
+```
+User describes bug / error
+ └─► PM classifies → "Bug Fix" path
+      └─► PM asks 3 targeted questions (reproduce, expected vs actual, affected area)
+           └─► User answers
+                └─► PM writes bug-report.md → shows summary
+                     └─► User says YES
+                          └─► PM dispatches Architect (Mode: BUG_FIX)
+                               └─► Architect writes minimal tasks.md (4 groups)
+                                    └─► Coder: Diagnose → writes diagnosis.md
+                                         └─► Coder: Fix → bug no longer reproduces
+                                              └─► Coder: Test + regression test
+                                                   └─► Reviewer validates
+                                                        └─► Done
+```
+
+### Hotfix (Urgent / Production Down)
+
+```
+User signals urgency ("production down", "critical", "ASAP")
+ └─► PM classifies → "Hotfix" path
+      └─► No questions, no confirmation (emergency)
+           └─► PM writes bug-report.md, dispatches Coder DIRECTLY
+                └─► Coder: find root cause → apply minimal fix → run tests
+                     └─► Done (add review manually if needed)
+```
+
+### Refactor
+
+```
+User describes refactor goal
+ └─► PM classifies → "Refactor" path
+      └─► PM asks 3 scope questions (target, goal, must-not-change boundary)
+           └─► User answers
+                └─► PM writes refactor-scope.md → shows summary
+                     └─► User says YES
+                          └─► PM dispatches Architect (Mode: REFACTOR)
+                               └─► Architect writes minimal tasks.md (4 groups)
+                                    └─► Coder: Analyse → writes refactor-plan.md
+                                         └─► Coder: Refactor (within scope only)
+                                              └─► Coder: Test (behavior unchanged)
+                                                   └─► Reviewer validates
+                                                        └─► Done
+```
+
+### Docs Update
+
+```
+User asks to update README / docs
+ └─► PM classifies → "Docs" path
+      └─► No questions needed
+           └─► PM dispatches Docs agent directly
+                └─► Done
 ```
 
 ### Session Resume
@@ -198,15 +260,27 @@ If Kiro CLI is restarted mid-workflow, the Architect reads `.kiro/specs/currents
 │
 ├── specs/                # Created at runtime per project
 │   ├── currentspec.md    # Active spec slug (single line)
-│   └── YYYY-MM-DD-<slug>/
-│       ├── prd/
-│       │   └── requirements.md  # PM-written, user-confirmed PRD
-│       ├── spec.md              # Architect's technical spec
-│       ├── tasks.md             # Task tracker ([ ] [x] [!])
-│       ├── ui/                  # UI/UX agent output
-│       ├── docs/                # arc42 + C4 documentation
-│       ├── review.md            # Reviewer findings
-│       └── security-review.md  # Security reviewer findings
+│   │
+│   ├── YYYY-MM-DD-<slug>/           # New feature
+│   │   ├── prd/requirements.md      # PM-written, user-confirmed PRD
+│   │   ├── spec.md                  # Architect's technical spec
+│   │   ├── tasks.md                 # Task tracker ([ ] [x] [!])
+│   │   ├── ui/                      # UI/UX agent output
+│   │   ├── docs/                    # arc42 + C4 documentation
+│   │   ├── review.md                # Reviewer findings
+│   │   └── security-review.md       # Security reviewer findings
+│   │
+│   ├── YYYY-MM-DD-bug-<slug>/       # Bug fix
+│   │   ├── bug-report.md            # PM-written bug report
+│   │   ├── diagnosis.md             # Coder's root cause analysis
+│   │   ├── tasks.md                 # 4-group minimal task tracker
+│   │   └── review.md
+│   │
+│   └── YYYY-MM-DD-refactor-<slug>/  # Refactor
+│       ├── refactor-scope.md        # PM-written scope doc
+│       ├── refactor-plan.md         # Coder's analysis and plan
+│       ├── tasks.md                 # 4-group minimal task tracker
+│       └── review.md
 │
 └── settings/
     └── cli.json          # Entry point: defaultAgent=pm, enableSubagent=true
