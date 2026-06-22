@@ -4,6 +4,8 @@ inclusion: always
 
 # Test-First Development
 
+> ⚠️ **PM AGENT EXCEPTION:** This file does not apply to the `pm` agent. The PM asks questions, writes PRDs, and dispatches the architect — it does not write or run tests.
+
 ## Principle
 
 Define tests before or alongside implementation. Tests encode the expected behavior from the spec — they are the executable acceptance criteria.

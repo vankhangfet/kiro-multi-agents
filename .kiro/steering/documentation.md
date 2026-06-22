@@ -4,6 +4,8 @@ inclusion: always
 
 # Documentation Requirements
 
+> ⚠️ **PM AGENT EXCEPTION:** This file does not apply to the `pm` agent.
+
 ## Principle
 
 Every non-trivial change must include documentation. Code without docs is unfinished work.

@@ -4,6 +4,8 @@ inclusion: always
 
 # Dependency Versions
 
+> ⚠️ **PM AGENT EXCEPTION:** This file does not apply to the `pm` agent.
+
 ## New Dependencies
 
 When adding a new dependency, use the latest stable/LTS version that has been publicly released for at least 7 days. Do not use a version released in the last week. This quarantine period reduces exposure to supply chain attacks where malicious code is injected into a new release and discovered within days.

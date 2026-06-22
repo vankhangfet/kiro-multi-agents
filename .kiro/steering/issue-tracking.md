@@ -4,6 +4,8 @@ inclusion: always
 
 # Issue Tracking Discipline
 
+> ⚠️ **PM AGENT EXCEPTION:** This file does not apply to the `pm` agent. The PM asks questions, writes PRDs, and dispatches the architect — it does not create issue docs.
+
 ## Principle
 
 Every bug fix, incident, or investigation that results in a code change MUST be documented in the project's `issues/` directory. Issue docs are the institutional memory that prevents the same problem from being solved twice.

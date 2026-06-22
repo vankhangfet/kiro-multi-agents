@@ -4,6 +4,8 @@ inclusion: always
 
 # Post-Deploy Validation
 
+> ⚠️ **PM AGENT EXCEPTION:** This file does not apply to the `pm` agent.
+
 ## Principle
 
 Every deploy script MUST include a post-deploy smoke test. Never rely on users to discover runtime errors.

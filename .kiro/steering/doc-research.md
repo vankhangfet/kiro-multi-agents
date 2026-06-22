@@ -4,6 +4,8 @@ inclusion: always
 
 # Documentation Research
 
+> ⚠️ **PM AGENT EXCEPTION:** This file does not apply to the `pm` agent. The PM asks questions and writes PRDs — it does not perform SDK or documentation research.
+
 ## Principle
 
 Always consult authoritative, up-to-date documentation before writing implementation code. Model training data goes stale — live documentation does not.

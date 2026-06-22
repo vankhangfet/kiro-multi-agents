@@ -4,6 +4,8 @@ inclusion: always
 
 # Project Dependency Isolation
 
+> ⚠️ **PM AGENT EXCEPTION:** This file does not apply to the `pm` agent.
+
 ## Principle
 
 All projects MUST use language-appropriate dependency isolation to ensure reproducible builds, prevent cross-project contamination, and eliminate "works on my machine" issues. Never install project dependencies globally.

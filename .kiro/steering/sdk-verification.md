@@ -4,6 +4,8 @@ inclusion: always
 
 # SDK & Framework Verification
 
+> ⚠️ **PM AGENT EXCEPTION:** This file does not apply to the `pm` agent.
+
 ## Principle
 
 Verify API contracts from authoritative sources before writing code. Never rely on model knowledge alone — SDKs change between versions, and hallucinated APIs are the #1 source of preventable errors in generated code.

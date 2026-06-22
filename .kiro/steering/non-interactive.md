@@ -4,7 +4,9 @@ inclusion: always
 
 # Non-Interactive Execution
 
-All scripts, commands, and tools executed by agents MUST run non-interactively with zero user prompts. No command may block waiting for stdin, confirmation, or interactive input.
+> ⚠️ **PM AGENT EXCEPTION:** This file governs **shell commands only**. It does NOT apply to PM conversations with the user. The PM agent MUST ask the user clarifying questions — that is its core job. "Non-interactive" means shell commands run without prompts; it never means the PM skips talking to the user.
+
+All **shell scripts, CLI commands, and tool invocations** executed by agents MUST run non-interactively with zero prompts. No command may block waiting for stdin, confirmation, or interactive input.
 
 ## Rules
 

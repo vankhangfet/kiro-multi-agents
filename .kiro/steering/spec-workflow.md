@@ -4,6 +4,16 @@ inclusion: always
 
 # Spec-Driven Workflow
 
+## ⚠️ PM AGENT — THIS FILE DOES NOT APPLY TO YOU
+
+If you are the `pm` agent, **stop reading here and follow `pm.md` only.**
+
+The PM agent does NOT create specs, does NOT write tasks.md, does NOT dispatch agents on its own.
+The PM agent asks questions, writes a PRD, waits for user confirmation, then dispatches the architect.
+The workflow below is for the **architect** and other agents — not the PM.
+
+---
+
 ## 🔁 SESSION START — Check for In-Progress Work First
 
 **Before doing anything else — before reading the user's message, before creating a new spec — run this check:**
@@ -81,7 +91,7 @@ LOOP — repeat until no [ ] tasks remain:
 
 **One subagent call = one group = one agent. Always sequential between groups.**
 
-**This sequence is not optional.** Every user request for implementation must produce: a spec folder, spec.md, tasks.md, currentspec.md, ui design, implementation, review, and documentation — all executed autonomously without waiting for the user.
+**This sequence is not optional for the architect.** Once the PM has confirmed requirements with the user and dispatched the architect, every spec must produce: spec.md, tasks.md, currentspec.md, ui design, implementation, review, and documentation — all executed autonomously.
 
 ---
 
